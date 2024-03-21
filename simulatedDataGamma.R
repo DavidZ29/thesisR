@@ -27,24 +27,37 @@ datosGamma <- function(n) {
   set.seed(2901)
   
   #Covariables
-  #shape determina la forma 
-  #scale determina la escala 
-  cov1 <- rgamma(n, shape = 2, scale = 2)
+  #betas
+  b0=7
+  b1=5
+  n=100
   
-  #Variable respuesta
-  response <- 2 + 3 * cov1 + rgamma(n, shape = 0, scale = 1)
+  #rate = 1/scale
+  #cov1 <- rgamma(n, shape = 2, scale = 2)
+  #varianza sigma^2
+  
+  cov1<-rnorm(n,mean=100,sd=4)
+
+  #eta
+  eta <- b0 + (b1 * cov1)
+  
+  mu<-exp(eta)
+  
+  #shape determina la forma 
+  #scale determina la escala
+  #respuesta
+  respuesta <- rgamma(n, shape = mu/2, scale = 2)
   
   #Data frame con los datos
-  db <- data.frame(y =response , x1 = cov1)
-
+  db <- data.frame(y =respuesta , x1 = cov1)
+  
   #Modelo gamlss
-  model <- gamlss(y ~ x1, data = db, family = GA)
+  model <- gamlss(y ~ x1, data = db, family = GA(mu.link = "log"))
   
   #Resumen del modelo
   print(summary(model))
   
   #Grafico plot del modelo
-  
   plot(model)
   
   #Exportacion de datos generados
