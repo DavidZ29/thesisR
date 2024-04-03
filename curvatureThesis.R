@@ -19,12 +19,12 @@ cargar_paquetes(paquetes_necesarios)
 #-----------------------------------------------------------------------------#
                                   #-salario-#
 #-----------------------------------------------------------------------------#
-dataTXT1 <- read.table(file.choose(), header = TRUE)
-dataEXC1 <- read_excel(file.choose())
+#datosTXT1 <- read.table(file.choose(), header = TRUE)
+datosEXC1 <- read_excel(file.choose())
 #-----------------------------------------------------------------------------#
                                 #-Lumber company-#
 #-----------------------------------------------------------------------------#
-dataTXT2 <- read.table(file.choose(),header = TRUE)
+datosTXT2 <- read.table(file.choose(),header = TRUE)
 #en revision, falla en la data
 #dataEXC2 <- read_excel(file.choose())
 #-----------------------------------------------------------------------------#
@@ -32,19 +32,19 @@ dataTXT2 <- read.table(file.choose(),header = TRUE)
 #-----------------------------------------------------------------------------#
                               #-Salario(GAMMA)-#
 #-----------------------------------------------------------------------------#
-model1 <-
+modelo1 <-
   gamlss(
     salario ~ genero + posicion + experiencia,
-    data = dataEXC1,
+    data = datosEXC1,
     family = GA(mu.link = "identity")
   )
 #-----------------------------------------------------------------------------#
                           #-Lumber company(POISSON)-#
 #-----------------------------------------------------------------------------#
-model2 <-
+modelo2 <-
   gamlss(
     nClientes ~ nViviendas + ingresoPd + edadPd + dCompetidor + dTienda,
-    data = dataTXT2,
+    data = datosTXT2,
     family = PO(mu.link = "log")
   )
 #-----------------------------------------------------------------------------#
@@ -53,8 +53,8 @@ model2 <-
 ############################################################################
 # La función infLocal en R se encarga de calcular la curvatura de los     #
 # parámetros para MLGs con el paquete GAMLSS. Primero, la función toma    #
-# como entrada un modelo ajustado (modelGamlss) el cual es definido      #
-# previamente y, opcionalmente, el ingreso de un parámetro (parameter)    #
+# como entrada un modelo ajustado (modeloGamlss) el cual es definido      #
+# previamente y, opcionalmente, el ingreso de un parámetro (parametro)    #
 # que indica qué parámetros calcular (por defecto o “BP” calcula beta y   #
 # phi, “B” calcula beta y “P” calcula phi). Luego, crea los siguientes   #
 # elementos: matriz modelo (X), traspuesta (tX), beta estimados (beta),   #
@@ -69,21 +69,21 @@ model2 <-
 # resaltar que cuando la distribución es Poisson la función por sí sola   #
 # detecta que debe manejar los cálculos solamente con el parámetro beta.  #
 # Para usar la función creada existen estas opciones:                    #
-# - infLocal(modelGamlss, ) -> Calcula para beta y phi                    #
-# - infLocal(modelGamlss, 'BP') -> Calcula para beta y phi                #
-# - infLocal(modelGamlss, 'B') -> Calcula para beta                       #
-# - infLocal(modelGamlss, 'P') -> Calcula para phi                        #
+# - infLocal(modeloGamlss, ) -> Calcula para beta y phi                    #
+# - infLocal(modeloGamlss, 'BP') -> Calcula para beta y phi                #
+# - infLocal(modeloGamlss, 'B') -> Calcula para beta                       #
+# - infLocal(modeloGamlss, 'P') -> Calcula para phi                        #
 # En algún otro caso de digitación para el parámetro -> 'Error in         #
 # infLocal<-function...'                                                 #
 ############################################################################
 #-----------------------------------------------------------------------------#
           #-Funcion de curvatura para modelos lineales generalizados-#
 #-----------------------------------------------------------------------------#
-infLocal <- function(modelGamlss, parameter = NULL,observaciones=NULL){
+infLocal <- function(modeloGamlss, parametro = NULL,observaciones=NULL){
 #-----------------------------------------------------------------------------#
                     #-logica para etiqueta de puntos-#
 #-----------------------------------------------------------------------------#
-  limites<-modelGamlss$noObs
+  limites<-modeloGamlss$noObs
   if(is.null(observaciones)){
     nObservaciones<-0
   }else if(observaciones>limites){
@@ -97,19 +97,19 @@ infLocal <- function(modelGamlss, parameter = NULL,observaciones=NULL){
                               #-componentes-#
 #-----------------------------------------------------------------------------#
   #Matriz modelo
-  X <- model.matrix(modelGamlss)
+  X <- model.matrix(modeloGamlss)
 #-----------------------------------------------------------------------------#
   #traspuesta de la matriz modelo
   tX <- t(X)
 #-----------------------------------------------------------------------------#
   #valores estimados de los parametros beta
-  beta <- coef(modelGamlss)
+  beta <- coef(modeloGamlss)
 #-----------------------------------------------------------------------------#
   #variables respuesta
-  y = as.vector(modelGamlss$y)
+  y = as.vector(modeloGamlss$y)
 #-----------------------------------------------------------------------------#
   # valores estimados mu
-  mu = as.vector(fitted(modelGamlss, "mu"))
+  mu = as.vector(fitted(modeloGamlss, "mu"))
 #-----------------------------------------------------------------------------#
             #-Logica de eleccion de distribucion y sus componentes-#
                 #-fe1:primera derivada de funcion exponencial-#
@@ -119,19 +119,19 @@ infLocal <- function(modelGamlss, parameter = NULL,observaciones=NULL){
 #-----------------------------------------------------------------------------#
                             #-distribucion normal-#
 #-----------------------------------------------------------------------------#  
-  if (modelGamlss$family[1] == "NO") {
-    phi <- 1 / (modelGamlss$sigma.coefficients) ^ 2
+  if (modeloGamlss$family[1] == "NO") {
+    phi <- 1 / (modeloGamlss$sigma.coefficients) ^ 2
     fe1 <-y*mu-((1/2)*(mu^{2}+y^{2}-phi^{-1})) 
     c2 <- 1/(2*phi^{2})
-    V <- as.matrix(diag(rep(1,modelGamlss$noObs))) 
-    if (modelGamlss$mu.link == "log") {
+    V <- as.matrix(diag(rep(1,modeloGamlss$noObs))) 
+    if (modeloGamlss$mu.link == "log") {
       W <- as.matrix(diag(mu ^ {2}))
     }
-    if (modelGamlss$mu.link == "identity")
+    if (modeloGamlss$mu.link == "identity")
     {
       W <- V
     }
-    if (modelGamlss$mu.link == "sqrt")
+    if (modeloGamlss$mu.link == "sqrt")
     {
       W <- as.matrix(diag(4*mu))
     }
@@ -139,19 +139,19 @@ infLocal <- function(modelGamlss, parameter = NULL,observaciones=NULL){
 #-----------------------------------------------------------------------------#
                         #-distribucion inversa normal-#
 #-----------------------------------------------------------------------------#  
-  if (modelGamlss$family[1] == "IG") {
-    phi <- 1 / (modelGamlss$sigma.coefficients) ^ 2
+  if (modeloGamlss$family[1] == "IG") {
+    phi <- 1 / (modeloGamlss$sigma.coefficients) ^ 2
     fe1 <-((-y*mu+2*mu^{2})/(2*mu^{3}))+((2-y*phi)/2*phi)
     c2 <- -1/(2*phi^{2})
     V <- as.matrix(diag(mu^(3))) 
-    if (modelGamlss$mu.link == "log") {
+    if (modeloGamlss$mu.link == "log") {
       W <- as.matrix(diag(1*(mu)^(-1)))
     }
-    if (modelGamlss$mu.link == "identity")
+    if (modeloGamlss$mu.link == "identity")
     {
       W <- as.matrix(diag(1*(mu)^(-3)))
     }
-    if (modelGamlss$mu.link == "sqrt")
+    if (modeloGamlss$mu.link == "sqrt")
     {
       W <- as.matrix(diag(4*(mu)^(-2)))
     }
@@ -159,42 +159,42 @@ infLocal <- function(modelGamlss, parameter = NULL,observaciones=NULL){
 #-----------------------------------------------------------------------------#
                             #-distribucion poisson-#
 #-----------------------------------------------------------------------------#  
-  if (modelGamlss$family[1] == "PO") {
+  if (modeloGamlss$family[1] == "PO") {
     phi <- 1
-    fe1 <- vector("numeric", length = modelGamlss$noObs)
+    fe1 <- vector("numeric", length = modeloGamlss$noObs)
     c2 <- 0
     V <- as.matrix(diag(mu))
-    if (modelGamlss$mu.link == "log") {
+    if (modeloGamlss$mu.link == "log") {
       W <- V
     }
-    if (modelGamlss$mu.link == "identity")
+    if (modeloGamlss$mu.link == "identity")
     {
       W <- as.matrix(diag(mu ^ {
         -1
       }))
     }
-    if (modelGamlss$mu.link == "sqrt")
+    if (modeloGamlss$mu.link == "sqrt")
     {
-      W <- as.matrix(diag(rep(4, modelGamlss$noObs)))
+      W <- as.matrix(diag(rep(4, modeloGamlss$noObs)))
     }
   }
 #-----------------------------------------------------------------------------#
                             #-distribucion gamma-#
 #-----------------------------------------------------------------------------#  
-  if (modelGamlss$family[1] == "GA") {
-    phi <- 1 / (modelGamlss$sigma.coefficients) ^ 2
+  if (modeloGamlss$family[1] == "GA") {
+    phi <- 1 / (modeloGamlss$sigma.coefficients) ^ 2
     fe1 <- (-y * mu ^ {-1}) + log(phi * y * mu ^ {-1}) + 1 - digamma(phi)
     c2 = 1 / phi - trigamma(phi)
-    V <- diag((modelGamlss$mu.fv) ^ 2)
-    if (modelGamlss$mu.link == "log")
+    V <- diag((modeloGamlss$mu.fv) ^ 2)
+    if (modeloGamlss$mu.link == "log")
     {
-      W <- diag(rep(1, modelGamlss$noObs))
+      W <- diag(rep(1, modeloGamlss$noObs))
     }
-    if (modelGamlss$mu.link == "identity")
+    if (modeloGamlss$mu.link == "identity")
     {
       W <- solve(V)
     }
-    if (modelGamlss$mu.link == "inverse")
+    if (modeloGamlss$mu.link == "inverse")
     {
       W <- V
     }
@@ -205,31 +205,31 @@ infLocal <- function(modelGamlss, parameter = NULL,observaciones=NULL){
   lBB <- -phi * tX %*% W %*% X
   lBP <- vector("numeric", length = length(beta))
   lPB <- t(lBP)
-  if (modelGamlss$family[1] == "IG") {
+  if (modeloGamlss$family[1] == "IG") {
     lPP <- sum(unlist(c2))
   } else{
-    lPP <- -modelGamlss$noObs * c2
+    lPP <- -modeloGamlss$noObs * c2
   }
   expFisher = rbind(cbind(lBB, lBP), cbind(lPB, lPP))
-  if (modelGamlss$family[1] != "PO"){
+  if (modeloGamlss$family[1] != "PO"){
     inverseEF <- solve(expFisher)
   }
 #-----------------------------------------------------------------------------#
                     #-logica para eleccion de parametros-#
 #-----------------------------------------------------------------------------#  
-  isPoisson<-modelGamlss$family[1] == "PO"
-  if(isPoisson){
+  esPoisson<-modeloGamlss$family[1] == "PO"
+  if(esPoisson){
     inverselBB<-solve(lBB)
     expectedFisher=inverselBB
   }
-  if((is.null(parameter)|| parameter == "B")&& isPoisson){
-    print("you selected β for Poisson")
+  if((is.null(parametro)|| parametro == "B")&& esPoisson){
+    print("Seleccionado parametro β para Poisson")
   }
-  else if ((is.null(parameter) || parameter == "BP") && !isPoisson) {
+  else if ((is.null(parametro) || parametro == "BP") && !esPoisson) {
     expectedFisher = inverseEF
-    print("you selected β and ϕ parameters")
+    print("Seleccionado parametros β y ϕ")
   }
-  else if (parameter == "B" && !isPoisson) {
+  else if (parametro == "B" && !esPoisson) {
     mZeros <- matrix(0, nrow = length(beta), ncol = length(beta))
     if (lPP == 0) {
       l22 <- 0
@@ -238,30 +238,30 @@ infLocal <- function(modelGamlss, parameter = NULL,observaciones=NULL){
     }
     L22 <- rbind(cbind(mZeros, lBP), cbind(lPB, l22))
     expectedFisher = inverseEF - L22
-    print("you selected β parameter")
+    print("Seleccionado parametro β")
   }
-  else if (parameter == "P" && !isPoisson) {
+  else if (parametro == "P" && !esPoisson) {
     l11 <- solve(lBB)
     L11 <- rbind(cbind(l11, lBP), cbind(lPB, 0))
     expectedFisher = inverseEF - L11
-    print("you selected ϕ parameter")
-  }else if(isPoisson){
-    cat("ERROR! : WRONG PARAMETER:",parameter,"\nYour distribution selected for model is Poisson: family =",modelGamlss$family[1])
+    print("eleccionado parametro ϕ")
+  }else if(esPoisson){
+    cat("ERROR! : Parametro equivocado:",parametro,"\nLa distribucion seleccionada es Poisson: family =",modeloGamlss$family[1])
   }
   else{
-    print("Error in infLocal<-function(modelGamlss,parameter)")
+    print("Error en funcion infLocal<-function(modeloGamlss,parametro)")
   }
 #-----------------------------------------------------------------------------#
             #-inversa de fisher esperada y residuos de pearson-#
 #-----------------------------------------------------------------------------#  
-  rP = diag((modelGamlss$y - (modelGamlss$mu.fv)) / (sqrt(modelGamlss$mu.fv) ^2))
+  rP = diag((modeloGamlss$y - (modeloGamlss$mu.fv)) / (sqrt(modeloGamlss$mu.fv) ^2))
 #-----------------------------------------------------------------------------#
               #-delta bajo el primer esquema de perturbacion-#
 #-----------------------------------------------------------------------------#  
   lBW <- phi * tX %*% W ^ {
     1 / 2
   } %*% rP
-  if(modelGamlss$family[1] == "PO"){
+  if(modeloGamlss$family[1] == "PO"){
     delta <- lBW
     tdelta <- t(delta)
   }else{lPW <- t(unlist(fe1))
@@ -272,16 +272,22 @@ infLocal <- function(modelGamlss, parameter = NULL,observaciones=NULL){
 #-----------------------------------------------------------------------------#  
   B_d = -(tdelta %*% expectedFisher %*% delta) * (sqrt(sum(diag(tdelta %*% expectedFisher %*% delta) ^ {2}))) ^ {-1 }
   poonpoon = diag(B_d)
+  
+  umbral<-2*mean(poonpoon)
+  umbral2<-umbral+(3*sd(poonpoon))
+  
   datos <- data.frame(
-    Observaciones = 1:modelGamlss$noObs,
+    Observaciones = 1:modeloGamlss$noObs,
     Poon = poonpoon
   )
   indices_puntos_altos <- tail(order(datos$Poon), nObservaciones)
+ 
   grafico <- ggplot(datos, aes(x = Observaciones, y = Poon)) +
     geom_point(shape = 19, size = 2)+ 
     geom_text(data = datos[indices_puntos_altos, ], aes(label = Observaciones), vjust =0 ,hjust=-0.5) + 
     labs(x = "Observaciones", y = "Poon", title = "Curvatura B_d")+
-    theme(panel.background = element_rect(fill = NA, color = "black"), panel.grid = element_blank())
+    theme(panel.background = element_rect(fill = NA, color = "black"), panel.grid = element_blank())+
+    geom_hline(yintercept = umbral2, linetype = "dashed", color = "red")
   print(grafico)
 }
 #-----------------------------------------------------------------------------#
@@ -299,14 +305,14 @@ infLocal <- function(modelGamlss, parameter = NULL,observaciones=NULL){
     #infLOcal(miModelo,"P",5)
 #-----------------------------------------------------------------------------# 
 #Gama
-infLocal(model1)
-infLocal(model1,"B")
-infLocal(model1,"P")
+#infLocal(modelo1)
+infLocal(modelo1,"B",3)
+#infLocal(modelo1,"BP")
 
 #Poisson
-infLocal(model2)
-infLocal(model2,"B")
-infLocal(model2,"P")
+infLocal(modelo2,"P",4)
+infLocal(modelo2,"B")
+infLocal(modelo2,"P")
 #-----------------------------------------------------------------------------#
                               #-Observacion-#
 #-----------------------------------------------------------------------------#

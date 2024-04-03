@@ -26,33 +26,31 @@ datosGamma <- function(n) {
   #semilla de creacion de datos alaetorios estatica
   set.seed(2901)
   
-  #Covariables
-  #betas
-  b0=7
-  b1=5
-  n=100
+  #BETAS
+  b0=2
+  b1=3
+  n=30
+  #COVARIABLE
+  cov1<-rnorm(n,mean=5,sd=4)
+  cov1
+  length(cov1)
   
-  #rate = 1/scale
-  #cov1 <- rgamma(n, shape = 2, scale = 2)
-  #varianza sigma^2
-  
-  cov1<-rnorm(n,mean=100,sd=4)
-
-  #eta
+  #COMPONENTES PARA VARIABLE RESPUESTA
   eta <- b0 + (b1 * cov1)
+  muExp<-exp(eta)
+  muExp
+  length(muExp)
   
-  mu<-exp(eta)
-  
-  #shape determina la forma 
-  #scale determina la escala
-  #respuesta
-  respuesta <- rgamma(n, shape = mu/2, scale = 2)
-  
+  #VARIABLE RESPUESTA
+  respuesta<-rGA(n, mu = muExp, sigma = 4)
+  respuesta
+  length(respuesta)
+  res<-as.numeric(respuesta)
   #Data frame con los datos
-  db <- data.frame(y =respuesta , x1 = cov1)
+  db1 <- data.frame(y =res , x = cov1)
   
   #Modelo gamlss
-  model <- gamlss(y ~ x1, data = db, family = GA(mu.link = "log"))
+  model <- gamlss(y~ x, data = db1, family = GA(mu.link = "log"))
   
   #Resumen del modelo
   print(summary(model))
