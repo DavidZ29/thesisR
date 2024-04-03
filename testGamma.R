@@ -10,35 +10,57 @@ cargar_paquetes <- function(paquetes) {
 }
 cargar_paquetes(paquetes_necesarios)
 
-
 #Funcion simuladora de datos gamma
 #Se solicita "n" (numero de datos simulados)
-datosGamma <- function(n) {
-  if (!is.numeric(n)) {
-    stop("El dato ingresado no es numérico.")
+datosGamma <- function(n,b0,b1) {
+  if (!is.numeric(n) || !is.numeric(b0) || !is.numeric(b1)) {
+    stop("Algun dato ingresado no es numérico.")
   }
-  
+  if(b0==0 || b1==0){
+    stop("Algun dato ingresado es cero.")
+  }
   if (n <= 0) {
     stop("El dato ingresado es menor o igual a cero")
   }
-  
+  set.seed(2901)
   #covariables
   x1 = rnorm(n, mean = 2, sd = 1)
   
-  muPredicted = 5 - (4 * x1)
+  eta = b0 + (b1 * x1)
   
   #phi=1/sigma^2 para gamlss -> sigma=1/sqrt(phi)
-  y = rGA(n, mu = exp(muPredicted), sigma = sqrt(5) / 5)
+  y = rGA(n, mu = exp(eta), sigma = sqrt(5) / 5)
   
-  datosga = data.frame(x1, y)
-  
+  db = data.frame(x1, y)
+  attach(db)
   #create the model
-  model = gamlss(y ~ x1,
-                 family = GA(mu.link = 'log', sigma.link = "identity"),
-                 data = datosga)
+  model = gamlss(y ~ x1,family = GA(mu.link = 'log', sigma.link = "identity"),data = db)
   summary(model)
   plot(model)
+ 
+  
+  #Logica de comparacion de simulacion
+  #coeficientes <- model$mu.coefficients
+  cof1<-abs(b0-model$mu.coefficients[1])
+  cof2<-abs(b1-model$mu.coefficients[2])
+  cat("Valores ingresados: Intercepto -> ",b0," x1 -> ",b1,"\nValores gamlss: Intercepto -> ",model$mu.coefficients[1]," x1 -> ",model$mu.coefficients[2],"\n")
+  cat("**DIFERENCIA**\nb0",cof1,"\nb1",cof2,"\n")
+  
+  #Exportacion de datos generados
+  exportExcel <- function(db) {
+    respuesta <- utils::menu(c("Sí", "No"), title = "¿Desea generar el archivo Excel?")
+    if (respuesta == 1) {
+      write.xlsx(db, file = "datosSimuladosGamma.xlsx")
+      print("Los datos se han exportado correctamente a excel en su raiz del proyecto.")
+    } else {
+      print("No se ha generado el archivo Excel.")
+    }
+  }
+  exportExcel(db)
+  
+  
+  
 }
 
-datosGamma(10)
+datosGamma(10,5,-2)
 
