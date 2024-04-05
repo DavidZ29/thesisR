@@ -61,6 +61,5 @@ datosGamma <- function(n,b0,b1) {
   
   
 }
-
-datosGamma(10,5,-2)
+datosGamma(50,6,-8)
 

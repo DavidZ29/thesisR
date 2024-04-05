@@ -19,8 +19,8 @@ cargar_paquetes(paquetes_necesarios)
 #-----------------------------------------------------------------------------#
                                   #-salario-#
 #-----------------------------------------------------------------------------#
-#datosTXT1 <- read.table(file.choose(), header = TRUE)
-datosEXC1 <- read_excel(file.choose())
+datosTXT1 <- read.table(file.choose(), header = TRUE)
+#datosEXC1 <- read_excel(file.choose())
 #-----------------------------------------------------------------------------#
                                 #-Lumber company-#
 #-----------------------------------------------------------------------------#
@@ -35,7 +35,7 @@ datosTXT2 <- read.table(file.choose(),header = TRUE)
 modelo1 <-
   gamlss(
     salario ~ genero + posicion + experiencia,
-    data = datosEXC1,
+    data = datosTXT1,
     family = GA(mu.link = "identity")
   )
 #-----------------------------------------------------------------------------#
@@ -306,7 +306,7 @@ infLocal <- function(modeloGamlss, parametro = NULL,observaciones=NULL){
 #-----------------------------------------------------------------------------# 
 #Gama
 #infLocal(modelo1)
-infLocal(modelo1,"B",3)
+infLocal(modelo1,"B",6)
 #infLocal(modelo1,"BP")
 
 #Poisson
