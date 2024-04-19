@@ -4,8 +4,8 @@
                           #-librerias necesarias-#
 #-----------------------------------------------------------------------------#
 #Automatizacion de carga de paquetes
-paquetes_necesarios <- c("gamlss", "readxl","ggplot2")
-cargar_paquetes <- function(paquetes) {
+paquetesNecesarios <- c("gamlss", "readxl","ggplot2")
+cargarPaquetes <- function(paquetes) {
   for (paquete in paquetes) {
     if (!requireNamespace(paquete, quietly = TRUE)) {
       install.packages(paquete)
@@ -13,31 +13,37 @@ cargar_paquetes <- function(paquetes) {
     library(paquete, character.only = TRUE)
   }
 }
-cargar_paquetes(paquetes_necesarios)
+cargarPaquetes(paquetesNecesarios)
 #-----------------------------------------------------------------------------#
                     #-importacion de las bases de datos-#
 #-----------------------------------------------------------------------------#
-                                  #-salario-#
+                                  #-salario Gamma-#
 #-----------------------------------------------------------------------------#
+#Carga de archivos desde txt (con cabeceras)
 datosTXT1 <- read.table(file.choose(), header = TRUE)
-#datosEXC1 <- read_excel(file.choose())
+#Carga de archivos desde excel (con cabeceras)
+datosEXC1 <- read_excel(file.choose())
 #-----------------------------------------------------------------------------#
-                                #-Lumber company-#
+                                #-Lumber company Poisson-#
 #-----------------------------------------------------------------------------#
+#Carga de archivos desde txt (con cabeceras)
 datosTXT2 <- read.table(file.choose(),header = TRUE)
-#en revision, falla en la data
-#dataEXC2 <- read_excel(file.choose())
+#Carga de archivos desde excel (con cabeceras)
+dataEXC2 <- read_excel(file.choose())
 #-----------------------------------------------------------------------------#
                             #-seleccion de modelo-#
 #-----------------------------------------------------------------------------#
                               #-Salario(GAMMA)-#
 #-----------------------------------------------------------------------------#
+
+
 modelo1 <-
   gamlss(
     salario ~ genero + posicion + experiencia,
     data = datosTXT1,
-    family = GA(mu.link = "identity")
+    family = GA(mu.link = "log")
   )
+summary(modelo1)
 #-----------------------------------------------------------------------------#
                           #-Lumber company(POISSON)-#
 #-----------------------------------------------------------------------------#
@@ -112,7 +118,7 @@ infLocal <- function(modeloGamlss, parametro = NULL,observaciones=NULL){
   mu = as.vector(fitted(modeloGamlss, "mu"))
 #-----------------------------------------------------------------------------#
             #-Logica de eleccion de distribucion y sus componentes-#
-                #-fe1:primera derivada de funcion exponencial-#
+                #-fe1:primera derivada de funcion exponencial respecto a phi-#
                         #-c2:segunda derivada de c-#
                           #-V:funcion varianza-#
                           #-W:matriz de pesos-#
@@ -183,7 +189,8 @@ infLocal <- function(modeloGamlss, parametro = NULL,observaciones=NULL){
 #-----------------------------------------------------------------------------#  
   if (modeloGamlss$family[1] == "GA") {
     phi <- 1 / (modeloGamlss$sigma.coefficients) ^ 2
-    fe1 <- (-y * mu ^ {-1}) + log(phi * y * mu ^ {-1}) + 1 - digamma(phi)
+    fe1 <- (-y * mu ^ {-1}-log(mu))-digamma(phi)+log(phi*y)+1
+    #c2 = 1 / phi - trigamma(phi)
     c2 = 1 / phi - trigamma(phi)
     V <- diag((modeloGamlss$mu.fv) ^ 2)
     if (modeloGamlss$mu.link == "log")
@@ -208,9 +215,10 @@ infLocal <- function(modeloGamlss, parametro = NULL,observaciones=NULL){
   if (modeloGamlss$family[1] == "IG") {
     lPP <- sum(unlist(c2))
   } else{
-    lPP <- -modeloGamlss$noObs * c2
+    #lPP <- -modeloGamlss$noObs * c2
+    lPP <- modeloGamlss$noObs * c2
   }
-  expFisher = rbind(cbind(lBB, lBP), cbind(lPB, lPP))
+  expFisher =rbind(cbind(lBB, lBP), cbind(lPB, lPP))
   if (modeloGamlss$family[1] != "PO"){
     inverseEF <- solve(expFisher)
   }
@@ -244,7 +252,7 @@ infLocal <- function(modeloGamlss, parametro = NULL,observaciones=NULL){
     l11 <- solve(lBB)
     L11 <- rbind(cbind(l11, lBP), cbind(lPB, 0))
     expectedFisher = inverseEF - L11
-    print("eleccionado parametro ϕ")
+    print("seleccionado parametro ϕ")
   }else if(esPoisson){
     cat("ERROR! : Parametro equivocado:",parametro,"\nLa distribucion seleccionada es Poisson: family =",modeloGamlss$family[1])
   }
@@ -287,7 +295,7 @@ infLocal <- function(modeloGamlss, parametro = NULL,observaciones=NULL){
     geom_text(data = datos[indices_puntos_altos, ], aes(label = Observaciones), vjust =0 ,hjust=-0.5) + 
     labs(x = "Observaciones", y = "Poon", title = "Curvatura B_d")+
     theme(panel.background = element_rect(fill = NA, color = "black"), panel.grid = element_blank())+
-    geom_hline(yintercept = umbral2, linetype = "dashed", color = "red")
+    geom_hline(yintercept = 0.0675, linetype = "dashed", color = "red")
   print(grafico)
 }
 #-----------------------------------------------------------------------------#
@@ -305,14 +313,14 @@ infLocal <- function(modeloGamlss, parametro = NULL,observaciones=NULL){
     #infLOcal(miModelo,"P",5)
 #-----------------------------------------------------------------------------# 
 #Gama
-#infLocal(modelo1)
-infLocal(modelo1,"B",6)
 #infLocal(modelo1,"BP")
+infLocal(modelo1,"B",5)
+#infLocal(modelo1,"P")
 
 #Poisson
-infLocal(modelo2,"P",4)
-infLocal(modelo2,"B")
-infLocal(modelo2,"P")
+#infLocal(modelo2,"P",4)
+infLocal(modelo2,"B",5)
+#infLocal(modelo2,"P")
 #-----------------------------------------------------------------------------#
                               #-Observacion-#
 #-----------------------------------------------------------------------------#
@@ -330,5 +338,4 @@ infLocal(modelo2,"P")
 # comprensión de los datos subyacentes.                                    #
 #############################################################################
 #-----------------------------------------------------------------------------#
-
 

@@ -21,7 +21,7 @@ c<-expression(-(1/2)*(log(2*y^(3)*pi*(phi)^(-1))+phi*y))
 c2<-derivative2(c)
 c2
 #GAMA
-fe<-expression(phi*((-y/mu)-log(mu))+(phi)*log(phi)+(phi-1)*log(y)-lgamma(phi))
+fe<-expression(phi*((-y/mu)-log(mu))-lgamma(phi)+(phi*log(phi*y))-log(y))
 fe1<-derivative1(fe)
 fe1
 c<-expression(phi*(log(phi)+log(y))-log(y)-lgamma(phi))
@@ -35,3 +35,4 @@ fe1
 c<-expression(-log(factorial(y)))
 c2<-derivative2(c)
 c2
+

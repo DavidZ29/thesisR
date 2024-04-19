@@ -37,7 +37,7 @@ datosGamma <- function(n,b0,b1) {
   model = gamlss(y ~ x1,family = GA(mu.link = 'log', sigma.link = "identity"),data = db)
   summary(model)
   plot(model)
- 
+  
   
   #Logica de comparacion de simulacion
   #coeficientes <- model$mu.coefficients
