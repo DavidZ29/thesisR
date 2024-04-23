@@ -295,7 +295,7 @@ infLocal <- function(modeloGamlss, parametro = NULL,observaciones=NULL){
     geom_text(data = datos[indices_puntos_altos, ], aes(label = Observaciones), vjust =0 ,hjust=-0.5) + 
     labs(x = "Observaciones", y = "Poon", title = "Curvatura B_d")+
     theme(panel.background = element_rect(fill = NA, color = "black"), panel.grid = element_blank())+
-    geom_hline(yintercept = 0.0675, linetype = "dashed", color = "red")
+    geom_hline(yintercept =umbral2, linetype = "dashed", color = "red")
   print(grafico)
 }
 #-----------------------------------------------------------------------------#
@@ -339,3 +339,8 @@ infLocal(modelo2,"B",5)
 #############################################################################
 #-----------------------------------------------------------------------------#
 
+saludo<-function(a){
+  cat("Hola desde saludo -> ",a)
+}
+
+saludo("david")

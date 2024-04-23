@@ -1,8 +1,8 @@
-#Carga de funcion inflocal
+#Carga de curvatura
 source("functions.R")
 
-#Automatizacion de carga de paquetes
-paquetes_necesarios <- c("gamlss", "xlsx","ggplot2")
+
+paquetes_necesarios <- c("gamlss", "xlsx","ggplot2","car")
 cargar_paquetes <- function(paquetes) {
   for (paquete in paquetes) {
     if (!requireNamespace(paquete, quietly = TRUE)) {
@@ -13,51 +13,44 @@ cargar_paquetes <- function(paquetes) {
 }
 cargar_paquetes(paquetes_necesarios)
 
-#Funcion simuladora de datos gamma
-#Se solicita "n" (numero de datos simulados)
-datosGamma <- function(n,b0,b1) {
-  if (!is.numeric(n) || !is.numeric(b0) || !is.numeric(b1)) {
-    stop("Algun dato ingresado no es numérico.")
-  }
-  if(b0==0 || b1==0){
-    stop("Algun dato ingresado es cero.")
-  }
-  if (n <= 0) {
-    stop("El dato ingresado es menor o igual a cero")
-  }
+#datosGamma <- function(n,b0,b1) {
+  
+  n=100
+  b0=6
+  b1=-8
   set.seed(2901)
   #covariables
   x1 = rnorm(n, mean = 2, sd = 1)
-  
   eta = b0 + (b1 * x1)
+  y = rGA(n, mu = exp(eta), sigma = sqrt(5) / 5)
   
-  #phi=1/sigma^2 para gamlss -> sigma=1/sqrt(phi)
-  #y = rGA(n, mu = exp(eta), sigma = sqrt(5) / 5)
-  y = rGA(n, mu = exp(eta), sigma = 1 /sqrt(5))
+  #Notacion options(scipen = 0) or options(scipen = 999)
+  
   
   db = data.frame(y,x1)
   attach(db)
   
-  #########################IMPLEMENTATION
   numeroDatos <- round(n * (5 / 100))
   alteracion<-2*mean(y)
   datosAleatorios <- sample(1:n, numeroDatos, replace = FALSE)
-  print(datosAleatorios)
   dbDatosObtenido<-db[datosAleatorios, ]
-  print(dbDatosObtenido)
   dbDatosAlterados <- db[datosAleatorios,]+alteracion
-  print(dbDatosAlterados)
-  db[datosAleatorios,c("y","x1")]<-dbDatosAlterados
-  ##################################################################
   
-  #create the model
+  db[datosAleatorios,c("y","x1")]<-dbDatosAlterados
+  
+  
   model = gamlss(y ~ x1,family = GA(mu.link = 'log', sigma.link = "identity"),data = db)
+  #modelGlm<-glm(y ~ x1, data = db,family = Gamma(link = "log"))
+  
   summary(model)
   plot(model)
   
-  #######IMPLEMENTATION INF LOCAL
-  infLocal(model,"B",numeroDatos)
-  ######################
+  infLocal(model,"B",5)
+  
+  
+  ##############---COOK DISTANCE--##############
+  infIndexPlot(modelGlm,var="Cook",id=list(method="y", n=5, cex=.8, col=carPalette()[1], location="lr"), grid=TRUE, main="Diagnostico")
+  
   
   #Logica de comparacion de simulacion
   #coeficientes <- model$mu.coefficients
@@ -77,5 +70,8 @@ datosGamma <- function(n,b0,b1) {
     }
   }
   exportExcel(db)
-}
-datosGamma(50,5,-7)
+  print(db)
+#}
+datosGamma(4,6,-8)
+
+
