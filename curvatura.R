@@ -35,15 +35,12 @@ dataEXC2 <- read_excel(file.choose())
 #-----------------------------------------------------------------------------#
                               #-Salario(GAMMA)-#
 #-----------------------------------------------------------------------------#
-
-
 modelo1 <-
   gamlss(
     salario ~ genero + posicion + experiencia,
     data = datosTXT1,
     family = GA(mu.link = "log")
   )
-summary(modelo1)
 #-----------------------------------------------------------------------------#
                           #-Lumber company(POISSON)-#
 #-----------------------------------------------------------------------------#
@@ -189,8 +186,7 @@ infLocal <- function(modeloGamlss, parametro = NULL,observaciones=NULL){
 #-----------------------------------------------------------------------------#  
   if (modeloGamlss$family[1] == "GA") {
     phi <- 1 / (modeloGamlss$sigma.coefficients) ^ 2
-    fe1 <- (-y * mu ^ {-1}-log(mu))-digamma(phi)+log(phi*y)+1
-    #c2 = 1 / phi - trigamma(phi)
+    fe1 <- ((-y * mu ^ {-1})-log(mu))-digamma(phi)+log(phi*y)+1
     c2 = 1 / phi - trigamma(phi)
     V <- diag((modeloGamlss$mu.fv) ^ 2)
     if (modeloGamlss$mu.link == "log")
@@ -215,7 +211,6 @@ infLocal <- function(modeloGamlss, parametro = NULL,observaciones=NULL){
   if (modeloGamlss$family[1] == "IG") {
     lPP <- sum(unlist(c2))
   } else{
-    #lPP <- -modeloGamlss$noObs * c2
     lPP <- modeloGamlss$noObs * c2
   }
   expFisher =rbind(cbind(lBB, lBP), cbind(lPB, lPP))
@@ -278,7 +273,7 @@ infLocal <- function(modeloGamlss, parametro = NULL,observaciones=NULL){
 #-----------------------------------------------------------------------------#
                             #-curvatura y grafico-#
 #-----------------------------------------------------------------------------#  
-  B_d = -(tdelta %*% expectedFisher %*% delta) * (sqrt(sum(diag(tdelta %*% expectedFisher %*% delta) ^ {2}))) ^ {-1 }
+  B_d = -(tdelta %*% expectedFisher %*% delta) * (sqrt(sum(diag(tdelta %*% expectedFisher %*% delta)^{2})))^{-1}
   poonpoon = diag(B_d)
   
   umbral<-2*mean(poonpoon)
@@ -313,14 +308,14 @@ infLocal <- function(modeloGamlss, parametro = NULL,observaciones=NULL){
     #infLOcal(miModelo,"P",5)
 #-----------------------------------------------------------------------------# 
 #Gama
-#infLocal(modelo1,"BP")
+infLocal(modelo1,"BP",5)
 infLocal(modelo1,"B",5)
-#infLocal(modelo1,"P")
+infLocal(modelo1,"P",5)
 
 #Poisson
-#infLocal(modelo2,"P",4)
+infLocal(modelo2,"P",5)
 infLocal(modelo2,"B",5)
-#infLocal(modelo2,"P")
+infLocal(modelo2,"BP",5)
 #-----------------------------------------------------------------------------#
                               #-Observacion-#
 #-----------------------------------------------------------------------------#
@@ -338,9 +333,3 @@ infLocal(modelo2,"B",5)
 # comprensión de los datos subyacentes.                                    #
 #############################################################################
 #-----------------------------------------------------------------------------#
-
-saludo<-function(a){
-  cat("Hola desde saludo -> ",a)
-}
-
-saludo("david")

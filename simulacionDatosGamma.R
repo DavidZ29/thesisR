@@ -41,6 +41,8 @@ datosGamma <- function(n,b0,b1) {
   #########################IMPLEMENTATION
   numeroDatos <- round(n * (5 / 100))
   alteracion<-2*mean(y)
+  # Generar for con datos aleatorios
+  # 
   datosAleatorios <- sample(1:n, numeroDatos, replace = FALSE)
   print(datosAleatorios)
   dbDatosObtenido<-db[datosAleatorios, ]
