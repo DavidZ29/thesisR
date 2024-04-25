@@ -258,6 +258,10 @@ infLocal <- function(modeloGamlss, parametro = NULL,observaciones=NULL){
             #-inversa de fisher esperada y residuos de pearson-#
 #-----------------------------------------------------------------------------#  
   rP = diag((modeloGamlss$y - (modeloGamlss$mu.fv)) / (sqrt(modeloGamlss$mu.fv) ^2))
+
+  
+  
+  
 #-----------------------------------------------------------------------------#
               #-delta bajo el primer esquema de perturbacion-#
 #-----------------------------------------------------------------------------#  

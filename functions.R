@@ -1,8 +1,4 @@
-test<-function(a){
-  cat("Hola desde test -> ",a)
-}
-
-paquetesNecesarios <- c("gamlss", "readxl","ggplot2")
+paquetesNecesarios <- c("gamlss", "readxl","ggplot2","car")
 
 
 infLocal <- function(modeloGamlss, parametro = NULL,observaciones=NULL){
@@ -202,7 +198,7 @@ infLocal <- function(modeloGamlss, parametro = NULL,observaciones=NULL){
   poonpoon = diag(B_d)
   
   umbral<-2*mean(poonpoon)
-  umbral2<-umbral+(3*sd(poonpoon))
+  #umbral2<-umbral+(3*sd(poonpoon))
   
   datos <- data.frame(
     Observaciones = 1:modeloGamlss$noObs,
@@ -210,11 +206,51 @@ infLocal <- function(modeloGamlss, parametro = NULL,observaciones=NULL){
   )
   indices_puntos_altos <- tail(order(datos$Poon), nObservaciones)
   
-  grafico <- ggplot(datos, aes(x = Observaciones, y = Poon)) +
+  valores_altos <- subset(datos, Poon > umbral)$Observaciones
+  vectorDeteccion=as.vector(valores_altos)
+  
+  # grafico <- ggplot(datos, aes(x = Observaciones, y = Poon)) +
+  #   geom_point(shape = 19, size = 2)+ 
+  #   geom_text(data = datos[indices_puntos_altos, ], aes(label = Observaciones), vjust =0 ,hjust=-0.5) + 
+  #   labs(x = "Observaciones", y = "Poon", title = "Curvatura")+
+  #   theme(panel.background = element_rect(fill = NA, color = "black"), panel.grid = element_blank())+
+  #   geom_hline(yintercept = umbral, linetype = "dashed", color = "red")
+  # print(grafico)
+  return(vectorDeteccion)
+}
+
+cook<-function(modelo,n){
+  W <- diag(rep(1, modelo$noObs))
+  
+  X <- model.matrix(modelo)
+  
+  tX <- t(X)
+  
+  inverse<-solve(tX%*%W%*%X)
+  
+  H<-W^{1/2}%*%X%*%inverse%*%tX%*%W^{1/2}
+  dgH<-diag(H)
+  
+  RP = diag((modelo$y - (modelo$mu.fv))/(sqrt(modelo$mu.fv) ^2))
+  dgRP<-diag(RP)
+  #Ingrese un abs para probar nada mas
+  refactor<-abs(dgRP)
+  
+  #LD<-(dgH/(1-dgH))
+  LD<-(dgH/(1-dgH))*(refactor/sqrt(1-dgH))
+  
+  datos <- data.frame(
+    Observaciones = 1:modelo$noObs,
+    Cooks = LD)
+  indices_puntos_altos <- tail(order(datos$Cooks), n)
+  
+  #valores_altos <- subset(datos, Cooks > umbral)$Observaciones
+  #print(valores_altos)
+  
+  grafico <- ggplot(datos, aes(x = Observaciones, y = Cooks)) +
     geom_point(shape = 19, size = 2)+ 
     geom_text(data = datos[indices_puntos_altos, ], aes(label = Observaciones), vjust =0 ,hjust=-0.5) + 
-    labs(x = "Observaciones", y = "Poon", title = "Curvatura B_d")+
-    theme(panel.background = element_rect(fill = NA, color = "black"), panel.grid = element_blank())+
-    geom_hline(yintercept = umbral, linetype = "dashed", color = "red")
+    labs(x = "Observaciones", y = "Poon", title = "Cook")+
+    theme(panel.background = element_rect(fill = NA, color = "black"), panel.grid = element_blank())
   print(grafico)
 }
