@@ -14,7 +14,7 @@ cargar_paquetes <- function(paquetes) {
 cargar_paquetes(paquetes_necesarios)
 
 # number of iterations
-iterations <- 5
+iterations <- 100
 
 # values of percentages
 values <- data.frame(Iteration = 1:iterations, Percentage = rep(NA, iterations))
@@ -36,11 +36,11 @@ for (i in 1:iterations) {
   #attach(db)
   
   #ALTERACION
-  alteracion<-2*mean(y)
+  alteracion<-3*mean(db$y)
   alteracion
   
   #OBTENER LOS DATOS A EXTRAER ALEATORIAMENTE DE LA DB PARA ALTERARLOS
-  datosAleatorios <- sample(1:30, 5, replace = FALSE)
+  datosAleatorios <- sample(1:30, 3, replace = FALSE)
   
   #BUSQUEDA DE LOS DATOS EN LA DB
   dbBusqueda<-db[datosAleatorios,]
@@ -61,8 +61,9 @@ for (i in 1:iterations) {
   modelGamlss = gamlss(y ~ x1,family = GA(mu.link = 'log', sigma.link = "identity"),data = db)
   
   #llamado a inflocal
-  response<-infLocal(modelGamlss,"BP",5)
+  response<-infLocal(modelGamlss,"B",5)
   compareVectors <- obsVector %in% response
+  #compareVectors <- response %in% obsVector
   countTrue <- sum(compareVectors)
   value <- (countTrue / length(obsVector)) * 100
   

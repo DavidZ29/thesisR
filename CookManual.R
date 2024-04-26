@@ -28,14 +28,14 @@ dgH<-diag(H)
 print(dgH)
 
 
-RP = diag((modelGamlss$y - (modelGamlss$mu.fv))/(sqrt(modelGamlss$mu.fv) ^2))
-dgRP<-diag(RP)
+RP = ((modelGamlss$y - (modelGamlss$mu.fv))/(sqrt(modelGamlss$mu.fv) ^2))
+#dgRP<-diag(RP)
 #Ingrese un abs para probar nada mas
-refactor<-abs(dgRP)
-print(dgRP)
-
+#refactor<-abs(dgRP)
+#print(dgRP)
+refactor=RP
 #LD<-(dgH/(1-dgH))
-LD<-(dgH/(1-dgH))*(refactor/sqrt(1-dgH))
+LD<-(dgH/(1-dgH))*(refactor/sqrt(1-dgH))^{2}*(1/modelGamlss$sigma.fv)
 
 print(LD)
 
