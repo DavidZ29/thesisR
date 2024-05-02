@@ -186,19 +186,19 @@ infLocal <-
     }
     
     #-logica para eleccion de parametros-#
-    response<-NULL
+    response <- NULL
     esPoisson <- modeloGamlss$family[1] == "PO"
     if (esPoisson) {
       inverselBB <- solve(lBB)
       expectedFisher = inverselBB
     }
     if ((is.null(parametro) || parametro == "B") && esPoisson) {
-      response<-print("Seleccionado parametro β para Poisson")
+      response <- print("Seleccionado parametro β para Poisson")
     }
     else if ((is.null(parametro) ||
               parametro == "BP") && !esPoisson) {
       expectedFisher = inverseEF
-      response<-print("Seleccionado parametros β y ϕ")
+      response <- print("Seleccionado parametros β y ϕ")
     }
     else if (parametro == "B" && !esPoisson) {
       mZeros <- matrix(0, nrow = length(beta), ncol = length(beta))
@@ -209,19 +209,20 @@ infLocal <-
       }
       L22 <- rbind(cbind(mZeros, lBP), cbind(lPB, l22))
       expectedFisher = inverseEF - L22
-      response<-print("Seleccionado parametro β")
+      response <- print("Seleccionado parametro β")
     }
     else if (parametro == "P" && !esPoisson) {
       l11 <- solve(lBB)
       L11 <- rbind(cbind(l11, lBP), cbind(lPB, 0))
       expectedFisher = inverseEF - L11
-      response<-print("seleccionado parametro ϕ")
+      response <- print("seleccionado parametro ϕ")
     } else if (esPoisson) {
       cat(
         "ERROR! : Parametro equivocado:",
         parametro,
         "\nLa distribucion seleccionada es Poisson: family =",
-        modeloGamlss$family[1],"\n"
+        modeloGamlss$family[1],
+        "\n"
       )
       stop("se detuvo el proceso")
     }
@@ -248,7 +249,7 @@ infLocal <-
     }
     
     #grafico distancia de Cook
-    if(parametro == "B" && !esPoisson){
+    if (parametro == "B") {
       inverse <- solve(tX %*% W %*% X)
       H <- W ^ {
         1 / 2
@@ -256,16 +257,23 @@ infLocal <-
         1 / 2
       }
       dgH <- diag(H)
-      LD <- (dgH / (1 - dgH)) * (rP / sqrt(1 - dgH)) ^ {
-        2
-      } * (1 / modeloGamlss$sigma.fv)
+      if (esPoisson) {
+        LD <- (dgH / (1 - dgH)) * (rP / sqrt(1 - dgH)) ^ {
+          2
+        }
+      } else{
+        LD <- (dgH / (1 - dgH)) * (rP / sqrt(1 - dgH)) ^ {
+          2
+        } * (1 / modeloGamlss$sigma.fv)
+      }
+      
       datosCook <- data.frame(Observaciones = 1:modeloGamlss$noObs,
-                              Cooks =LD)
+                              Cooks = LD)
       indicesPuntos <- tail(order(datosCook$Cooks), nObservaciones)
       graficoCook <-
         ggplot(datosCook, aes(x = Observaciones, y = Cooks)) +
         geom_segment(
-          data = datosCook[indicesPuntos, ],
+          data = datosCook[indicesPuntos,],
           aes(
             x = Observaciones,
             y = 0,
@@ -277,13 +285,18 @@ infLocal <-
         ) +
         geom_point(shape = 19, size = 1.5) +
         geom_text(
-          data = datosCook[indicesPuntos, ],
+          data = datosCook[indicesPuntos,],
           aes(label = Observaciones),
           size = 3 ,
           vjust = 0 ,
           hjust = -0.5
         ) +
-        labs(x = "Observaciones", y = "Distancia de Cook", title = "Grafico distancia de Cook",subtitle = response) +
+        labs(
+          x = "Observaciones",
+          y = "Distancia de Cook",
+          title = "Grafico distancia de Cook",
+          subtitle = response
+        ) +
         theme(panel.background = element_rect(fill = NA, color = "black"),
               panel.grid = element_blank())
       print(graficoCook)
@@ -303,21 +316,29 @@ infLocal <-
     umbral <- 2 * mean(poonpoon)
     #umbral2<-umbral+(3*sd(poonpoon))
     
-    datosCurvatura <- data.frame(Observaciones = 1:modeloGamlss$noObs,
-                                 Poon = poonpoon)
-    indices_puntos_altos <- tail(order(datosCurvatura$Poon), nObservaciones)
-
+    datosCurvatura <-
+      data.frame(Observaciones = 1:modeloGamlss$noObs,
+                 Poon = poonpoon)
+    indices_puntos_altos <-
+      tail(order(datosCurvatura$Poon), nObservaciones)
+    
     #grafico curvatura
-    grafico <- ggplot(datosCurvatura, aes(x = Observaciones, y = Poon)) +
+    grafico <-
+      ggplot(datosCurvatura, aes(x = Observaciones, y = Poon)) +
       geom_point(shape = 19, size = 1.5) +
       geom_text(
-        data = datosCurvatura[indices_puntos_altos, ],
+        data = datosCurvatura[indices_puntos_altos,],
         aes(label = Observaciones),
         size = 3 ,
         vjust = 0 ,
         hjust = -0.5
       ) +
-      labs(x = "Observaciones", y = "Poon", title = "Grafico de curvatura ",subtitle = response) +
+      labs(
+        x = "Observaciones",
+        y = "Poon",
+        title = "Grafico de curvatura ",
+        subtitle = response
+      ) +
       theme(panel.background = element_rect(fill = NA, color = "black"),
             panel.grid = element_blank()) +
       geom_hline(yintercept = umbral,
