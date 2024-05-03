@@ -1,23 +1,11 @@
 #Carga de funcion inflocal
-source("functions.R")
-
-#Automatizacion de carga de paquetes
-paquetes_necesarios <- c("gamlss", "xlsx","ggplot2")
-cargar_paquetes <- function(paquetes) {
-  for (paquete in paquetes) {
-    if (!requireNamespace(paquete, quietly = TRUE)) {
-      install.packages(paquete)
-    }
-    library(paquete, character.only = TRUE)
-  }
-}
-cargar_paquetes(paquetes_necesarios)
+source("(F)CurvaturaIteraciones.R")
 
 # number of iterations
-iterations <- 100
+iterations <- 50
 
-# values of percentages
-values <- data.frame(Iteration = 1:iterations, Percentage = rep(NA, iterations))
+# db de porcentajes
+valores <- data.frame(Iteraciones = 1:iterations, Porcentaje = rep(NA, iterations))
 
 # Iterar sobre el número de iteraciones
 for (i in 1:iterations) {
@@ -29,7 +17,7 @@ for (i in 1:iterations) {
   eta = 5-(4*x1)
   
   #RESPUESTA
-  y = rGA(30, mu = exp(eta), sigma = 1 /sqrt(5))
+  y = rGA(30, mu = exp(eta), sigma = sqrt(5)/5)
   
   #DB CON DATOS SIMULADOS
   db = data.frame(y,x1)
@@ -37,10 +25,9 @@ for (i in 1:iterations) {
   
   #ALTERACION
   alteracion<-3*mean(db$y)
-  alteracion
   
   #OBTENER LOS DATOS A EXTRAER ALEATORIAMENTE DE LA DB PARA ALTERARLOS
-  datosAleatorios <- sample(1:30, 3, replace = FALSE)
+  datosAleatorios <- sample(1:30, 2, replace = FALSE)
   
   #BUSQUEDA DE LOS DATOS EN LA DB
   dbBusqueda<-db[datosAleatorios,]
@@ -48,31 +35,27 @@ for (i in 1:iterations) {
   
   #Obtener el numero de las observaciones en un vector
   obsVector <- as.numeric(row.names(dbBusqueda))
-  print(obsVector)
   
   #alteracion solo a respuesta
   db[datosAleatorios,c("y")]<-dbAlterados[,1]
   
   #alteracion a covariable -> db[datosAleatorios,c("x1")]<-dbAlterados[,2]
-  
   #alteracion a las dos variables -> db[datosAleatorios,c("y","x1")]<-dbAlterados[,c(1,2)]
   
   #MODELO
   modelGamlss = gamlss(y ~ x1,family = GA(mu.link = 'log', sigma.link = "identity"),data = db)
   
   #llamado a inflocal
-  response<-infLocal(modelGamlss,"B",5)
-  compareVectors <- obsVector %in% response
-  #compareVectors <- response %in% obsVector
-  countTrue <- sum(compareVectors)
-  value <- (countTrue / length(obsVector)) * 100
+  response<-infLocal(modelGamlss,"P")
   
-  #llamado a cook
-  #cook(modelGamlss,4)
-  values$Percentage[i] <- value
+  compareVectors <- obsVector %in% response
+  countTrue <- sum(compareVectors)
+  value <- round((countTrue / length(obsVector)) * 100)
+  
+  valores$Porcentaje[i] <- value
 }
 # average for porcentages of algorithm
-average <- mean(values$Percentage, na.rm = TRUE)
-
+average <-mean(valores$Porcentaje, na.rm = TRUE)
+porcentaje<-round(average)
 # add value of the data
-values[nrow(values) + 1, ] <- c("Detection rate",paste(average," %"))
+valores[nrow(valores) + 1, ] <- c("Tasa deteccion",paste(porcentaje," %"))
