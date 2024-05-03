@@ -358,10 +358,6 @@ infLocal <-
     }
     poonpoon = diag(B_d)
     
-    #umbral
-    umbral <- 2 * mean(poonpoon)
-    #umbral2<-umbral+(3*sd(poonpoon))
-    
     datosCurvatura <-
       data.frame(Observaciones = 1:modeloGamlss$noObs,
                  Poon = poonpoon)
@@ -376,7 +372,6 @@ infLocal <-
     
     indices_puntos_altos <-
       tail(order(datosCurvatura$Poon), nPorciento)
-    
     
     vectorDeteccion <- as.vector(row.names(datosOrdenados[1:nPorciento, ]))
     print(vectorDeteccion)
@@ -401,10 +396,7 @@ infLocal <-
         subtitle = response
       ) +
       theme(panel.background = element_rect(fill = NA, color = "black"),
-            panel.grid = element_blank()) +
-      geom_hline(yintercept = umbral,
-                 linetype = "dashed",
-                 color = "red")
+            panel.grid = element_blank())
     print(grafico)
   }
 #-----------------------------------------------------------------------------#
@@ -440,11 +432,11 @@ infLocal <-
 #############################################################################
 #-----------------------------------------------------------------------------#
 #Gama
-infLocal(modelo1, "BP", 5)
-infLocal(modelo1, "B", 5)
-infLocal(modelo1, "P", 5)
+#infLocal(modelo1, "BP")
+infLocal(modelo1, "B")
+#infLocal(modelo1, "P")
 
 #Poisson
-infLocal(modelo2, "P", 5)
-infLocal(modelo2, "B", 5)
-infLocal(modelo2, "BP", 5)
+#infLocal(modelo2, "P", 5)
+infLocal(modelo2, "B")
+#infLocal(modelo2, "BP", 5)
