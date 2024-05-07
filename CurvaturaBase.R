@@ -373,6 +373,10 @@ infLocal <-
     indices_puntos_altos <-
       tail(order(datosCurvatura$Poon), nPorciento)
     
+    
+    puntos_altos1 <- datosTXT2[indices_puntos_altos, ]
+    print(puntos_altos1)
+    
     vectorDeteccion <- as.vector(row.names(datosOrdenados[1:nPorciento, ]))
     print(vectorDeteccion)
   
