@@ -37,7 +37,7 @@ modelo2 <-
     family = PO(mu.link = "log")
   )
 
-
+summary(modelo2)
 
 #-----------------------------------------------------------------------------#
 #-INFORMACION DE LA FUNCION PROGRAMADA-#
@@ -375,11 +375,14 @@ infLocal <-
     
     
     puntos_altos1 <- datosTXT2[indices_puntos_altos, ]
-    print(puntos_altos1)
+    #print(puntos_altos1)
     
     vectorDeteccion <- as.vector(row.names(datosOrdenados[1:nPorciento, ]))
     print(vectorDeteccion)
   
+    
+    filas_seleccionadas <- datosTXT2[vectorDeteccion, ]
+    print(filas_seleccionadas)
     ####################################
     
     #grafico
@@ -436,9 +439,9 @@ infLocal <-
 #############################################################################
 #-----------------------------------------------------------------------------#
 #Gama
-#infLocal(modelo1, "BP")
+infLocal(modelo1, "BP")
 infLocal(modelo1, "B")
-#infLocal(modelo1, "P")
+infLocal(modelo1, "P")
 
 #Poisson
 #infLocal(modelo2, "P", 5)

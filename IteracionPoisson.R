@@ -1,8 +1,9 @@
 #Carga de funcion inflocal
 source("(F)CurvaturaIteraciones.R")
+options(warn = -1)
 
 # number of iterations
-iterations <- 1
+iterations <- 1000
 
 # db de porcentajes
 valores <- data.frame(Iteraciones = 1:iterations, Porcentaje = rep(NA, iterations))
@@ -17,22 +18,23 @@ if (valor %in% c(2, 5, 10)) {
     # Cantidad de observaciones
     n <- 50
     # COVARIABLE
-    x1 <- rnorm(n, mean = 2, sd = 1)
+    x1<-rnorm(n,mean=2,sd=1)
     
     # ETA (b0=5, b1=-4)
-    eta <- 5 - (4 * x1)
+    eta<- -6+(2*x1)
     
     # RESPUESTA
-    y <- rGA(n, mu = exp(eta), sigma = sqrt(5) / 5)
+    y <- rPO(n,mu= exp(eta))
     
     # DB CON DATOS SIMULADOS
     db <- data.frame(y, x1)
     
     # ALTERACION
-    alteracion <- 3 * mean(db$y)
+    alteracion <- round(3 * mean(db$y))
     
     cantidadObs<-round((valor/100) * n)
     
+   
     # OBTENER LOS DATOS A EXTRAER ALEATORIAMENTE DE LA DB PARA ALTERARLOS
     datosAleatorios <- sample(1:n, cantidadObs, replace = FALSE)
     
@@ -42,21 +44,19 @@ if (valor %in% c(2, 5, 10)) {
     
     # Obtener el número de las observaciones en un vector
     obsVector <- as.numeric(row.names(dbBusqueda))
-    print(paste("[OBSVECTOR] ",obsVector))
-    
     
     # Alteración solo a respuesta
     db[datosAleatorios, c("y")] <- dbAlterados[, 1]
     
+    # Redondear la columna y y convertirla a enteros
+    #db$y <- as.integer(round(db$y))
+    
     # Alteración a covariable -> db[datosAleatorios, c("x1")] <- dbAlterados[, 2]
     # Alteración a las dos variables -> db[datosAleatorios, c("y", "x1")] <- dbAlterados[, c(1, 2)]
-    
     # MODELO
-    modelGamlss <- gamlss(y ~ x1, family = GA(mu.link = 'log', sigma.link = "identity"), data = db)
-    
+    modelGamlss <- gamlss(y ~ x1, family = PO(mu.link='log'), data = db)
     # Llamado a inflocal
-    response <- infLocal(modelGamlss, "BP", valor)
-    print(paste("[INFLOCAL] ",response))
+    response <- infLocal(modelGamlss, "B", valor)
     
     compareVectors <- obsVector %in% response
     countTrue <- sum(compareVectors)
@@ -76,7 +76,7 @@ if (valor %in% c(2, 5, 10)) {
   nombre_archivo <- readline(prompt = "Ingrese el nombre del archivo Excel (e.g., 'valores.xlsx') -> ")
   
   #  ruta y nombre del archivo
-  ruta_archivo <- file.path("./GMexcelSimulations", nombre_archivo)
+  ruta_archivo <- file.path("./POexcelSimulations", nombre_archivo)
   
   # guardar el excel
   write_xlsx(valores, path = ruta_archivo)
