@@ -1,87 +1,145 @@
 #Carga de funcion inflocal
 source("(F)CurvaturaIteraciones.R")
 
-# number of iterations
-iterations <- 1
+#i:iteraciones
+#n:numero de datos
+#p:porcentaje
 
-# db de porcentajes
-valores <- data.frame(Iteraciones = 1:iterations, Porcentaje = rep(NA, iterations))
+resultado_total <- data.frame(iteration = integer(),
+                              dataNumber = integer(),
+                              modification = integer(),
+                              detection = integer())
 
-# Solicitar valor al usuario
-valor <- as.numeric(readline(prompt = "Ingrese un valor [2, 5, 10] -> "))
+iterationGamma <- function(i, n, p) {
+  # number of iterations
+  iterations <- i
+  
+  # db de porcentajes
+  valores <-
+    data.frame(Iteraciones = 1:iterations,
+               Porcentaje = rep(NA, iterations))
+  # Validar el valor ingresado
+  if (p %in% c(2, 5, 10)) {
+    for (i in 1:iterations) {
+      #-------------INICIO SIMULACION
+      # Cantidad de observaciones
+      # COVARIABLE
+      x1 <- rnorm(n, mean = 2, sd = 1)
+      
+      # ETA (b0=5, b1=-4)
+      eta <- 5 - (4 * x1)
+      
+      # RESPUESTA
+      y <- rGA(n, mu = exp(eta), sigma = sqrt(5) / 5)
+      
+      # DB CON DATOS SIMULADOS
+      db <- data.frame(y, x1)
+      
+      # ALTERACION
+      alteracion <- 3 * mean(db$y)
+      
+      cantidadObs <- round((p / 100) * n)
+      
+      # OBTENER LOS DATOS A EXTRAER ALEATORIAMENTE DE LA DB PARA ALTERARLOS
+      datosAleatorios <- sample(1:n, cantidadObs, replace = FALSE)
+      
+      # BUSQUEDA DE LOS DATOS EN LA DB
+      dbBusqueda <- db[datosAleatorios, ]
+      dbAlterados <- db[datosAleatorios, ] + alteracion
+      
+      # Obtener el número de las observaciones en un vector
+      obsVector <- as.numeric(row.names(dbBusqueda))
+      
+      # Alteración solo a respuesta
+      db[datosAleatorios, c("y")] <- dbAlterados[, 1]
+      
+      # Alteración a covariable -> db[datosAleatorios, c("x1")] <- dbAlterados[, 2]
+      # Alteración a las dos variables -> db[datosAleatorios, c("y", "x1")] <- dbAlterados[, c(1, 2)]
+      
+      # MODELO
+      modelGamlss <-
+        gamlss(
+          y ~ x1,
+          family = GA(mu.link = 'log', sigma.link = "identity"),
+          data = db
+        )
+      
+      # Llamado a inflocal
+      response <- infLocal(modelGamlss, "BP", 5)
 
-# Validar el valor ingresado
-if (valor %in% c(2, 5, 10)) {
-  for (i in 1:iterations) {
-    #-------------INICIO SIMULACION
-    # Cantidad de observaciones
-    n <- 50
-    # COVARIABLE
-    x1 <- rnorm(n, mean = 2, sd = 1)
+      compareVectors <- obsVector %in% response
+      countTrue <- sum(compareVectors)
+      value <- round((countTrue / length(obsVector)) * 100)
+      
+      valores$Porcentaje[i] <- value
+    }
     
-    # ETA (b0=5, b1=-4)
-    eta <- 5 - (4 * x1)
+    # Promedio de los porcentajes del algoritmo
+    average <- mean(valores$Porcentaje, na.rm = TRUE)
+    porcentaje <- round(average)
     
-    # RESPUESTA
-    y <- rGA(n, mu = exp(eta), sigma = sqrt(5) / 5)
+    # Agregar el valor de la tasa de detección al data frame 'valores'
+    valores[nrow(valores) + 1,] <-
+      c("Tasa deteccion", paste(porcentaje, " %"))
     
-    # DB CON DATOS SIMULADOS
-    db <- data.frame(y, x1)
+    dataResponse <- data.frame(iteration = i,
+                               dataNumber = n,
+                               modification = p,
+                               detection = porcentaje)
     
-    # ALTERACION
-    alteracion <- 3 * mean(db$y)
-    
-    cantidadObs<-round((valor/100) * n)
-    
-    # OBTENER LOS DATOS A EXTRAER ALEATORIAMENTE DE LA DB PARA ALTERARLOS
-    datosAleatorios <- sample(1:n, cantidadObs, replace = FALSE)
-    
-    # BUSQUEDA DE LOS DATOS EN LA DB
-    dbBusqueda <- db[datosAleatorios,]
-    dbAlterados <- db[datosAleatorios,] + alteracion
-    
-    # Obtener el número de las observaciones en un vector
-    obsVector <- as.numeric(row.names(dbBusqueda))
-    print(paste("[OBSVECTOR] ",obsVector))
+    # Agregar los resultados a la tabla global
+    resultado_total <<- rbind(resultado_total, dataResponse)
     
     
-    # Alteración solo a respuesta
-    db[datosAleatorios, c("y")] <- dbAlterados[, 1]
+    dataResponse <- data.frame(iteration = i,
+                               dataNumber = n,
+                               modification = p,
+                               detection = porcentaje)
     
-    # Alteración a covariable -> db[datosAleatorios, c("x1")] <- dbAlterados[, 2]
-    # Alteración a las dos variables -> db[datosAleatorios, c("y", "x1")] <- dbAlterados[, c(1, 2)]
     
-    # MODELO
-    modelGamlss <- gamlss(y ~ x1, family = GA(mu.link = 'log', sigma.link = "identity"), data = db)
-    
-    # Llamado a inflocal
-    response <- infLocal(modelGamlss, "BP", valor)
-    print(paste("[INFLOCAL] ",response))
-    
-    compareVectors <- obsVector %in% response
-    countTrue <- sum(compareVectors)
-    value <- round((countTrue / length(obsVector)) * 100)
-    
-    valores$Porcentaje[i] <- value
+    } else {
+    cat("Error: El valor ingresado no es válido. Debe ser 2, 5, o 10.\n")
   }
-  
-  # Promedio de los porcentajes del algoritmo
-  average <- mean(valores$Porcentaje, na.rm = TRUE)
-  porcentaje <- round(average)
-  
-  # Agregar el valor de la tasa de detección al data frame 'valores'
-  valores[nrow(valores) + 1, ] <- c("Tasa deteccion", paste(porcentaje, " %"))
-  
-  # nombre del archivo
-  nombre_archivo <- readline(prompt = "Ingrese el nombre del archivo Excel (e.g., 'valores.xlsx') -> ")
-  
-  #  ruta y nombre del archivo
-  ruta_archivo <- file.path("./GMexcelSimulations", nombre_archivo)
-  
-  # guardar el excel
-  write_xlsx(valores, path = ruta_archivo)
-  
-  cat("Archivo Excel guardado con éxito en:", ruta_archivo, "\n")
-} else {
-  cat("Error: El valor ingresado no es válido. Debe ser 2, 5, o 10.\n")
 }
+
+run<-TRUE
+
+if(run){
+  iterations<-1000
+  
+  dataNumber1<-50
+  dataNumber2<-100
+  dataNumber3<-200
+  dataNumber4<-1000
+  
+  p2<-2
+  p5<-5
+  p10<-10
+  
+  iterationGamma(iterations,dataNumber1,p2)
+  iterationGamma(iterations,dataNumber1,p5)
+  iterationGamma(iterations,dataNumber1,p10)
+
+  iterationGamma(iterations,dataNumber2,p2)
+  iterationGamma(iterations,dataNumber2,p5)
+  iterationGamma(iterations,dataNumber2,p10)
+  
+  iterationGamma(iterations,dataNumber3,p2)
+  iterationGamma(iterations,dataNumber3,p5)
+  iterationGamma(iterations,dataNumber3,p10)
+  
+  iterationGamma(iterations,dataNumber4,p2)
+  iterationGamma(iterations,dataNumber4,p5)
+  iterationGamma(iterations,dataNumber4,p10)
+  
+  #filename <- paste(sprintf("./GMSimulationsV2./SG_I%d.html", iterations))
+  filename2 <- paste(sprintf("./GMSimulationsV2./SG_I%d.txt", iterations))
+  
+  #print(xtable(resultado_total), type = "html", file = filename, include.rownames = FALSE)
+  write.table(resultado_total, file =filename2, row.names = FALSE)
+  print(paste("[ITERACIONES] ",iterations))
+  }
+
+
+
+

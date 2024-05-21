@@ -3,7 +3,7 @@
 #-----------------------------------------------------------------------------#
 #-Librerias necesarias-#
 #-----------------------------------------------------------------------------#
-paquetesNecesarios <- c("gamlss", "ggplot2","writexl")
+paquetesNecesarios <- c("gamlss", "ggplot2","writexl","xtable")
 cargarPaquetes <- function(paquetes) {
   for (paquete in paquetes) {
     if (!requireNamespace(paquete, quietly = TRUE)) {
@@ -257,15 +257,13 @@ infLocal <-
     
     #PORCENTAJE DE PUNTOS
     nPorciento <- round((nporcentaje/100) * nrow(datosCurvatura))
-    print(paste("porcentaje", porcentaje))
-    
+
     indices_puntos_altos <-
       tail(order(datosCurvatura$Poon), nPorciento)
     
     vectorDeteccion <-
       as.vector(row.names(datosOrdenados[1:nPorciento,]))
     
-    print(response)
     #retorna vector deteccion
     return(vectorDeteccion)
   }

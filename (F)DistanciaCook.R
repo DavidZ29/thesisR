@@ -33,12 +33,12 @@ datos <- data.frame(
   Observaciones = 1:modelGamlss$noObs,
   Cooks = LD
 )
-indicesPuntos <- tail(order(datos$Cooks), 5)
+indicesPuntos <- tail(order(datos$Cooks), 10)
 grafico <- ggplot(datos, aes(x = Observaciones, y = Cooks)) +
   geom_segment(data = datos[indicesPuntos, ], aes(x = Observaciones, y = 0, xend = Observaciones, yend = Cooks), linetype = "dashed", color = "grey")+
   geom_point(shape = 19, size = 1.5)+
   geom_text(data = datos[indicesPuntos, ], aes(label = Observaciones), size=3 ,vjust =0 ,hjust=-0.5) + 
-  labs(x = "Observaciones", y = "Distancia de Cook", title = "Gráfico distancia de Cook")+
+  labs(x = "Observaciones", y = "Distancia de Cook")+
   theme(panel.background = element_rect(fill = NA, color = "black"), panel.grid = element_blank())
 
 print(grafico)

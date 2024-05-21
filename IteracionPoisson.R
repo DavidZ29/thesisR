@@ -16,7 +16,7 @@ if (valor %in% c(2, 5, 10)) {
   for (i in 1:iterations) {
     #-------------INICIO SIMULACION
     # Cantidad de observaciones
-    n <- 50
+    n <- 1000
     # COVARIABLE
     x1<-rnorm(n,mean=2,sd=1)
     
@@ -56,7 +56,7 @@ if (valor %in% c(2, 5, 10)) {
     # MODELO
     modelGamlss <- gamlss(y ~ x1, family = PO(mu.link='log'), data = db)
     # Llamado a inflocal
-    response <- infLocal(modelGamlss, "B", valor)
+    response <- infLocal(modelGamlss, "B", 5)
     
     compareVectors <- obsVector %in% response
     countTrue <- sum(compareVectors)
