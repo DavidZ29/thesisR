@@ -1,0 +1,4 @@
+"iteration" "dataNumber" "modification" "detection"
+1000 50 2 100
+1000 50 5 52
+1000 50 10 21

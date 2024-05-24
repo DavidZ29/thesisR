@@ -36,7 +36,9 @@ iterationPoisson <- function(i, n, p) {
       db <- data.frame(y, x1)
       
       # ALTERACION
-      alteracion <- ceiling(3 * mean(db$y))
+      #alteracion <- ceiling(3 * mean(db$y))
+      alteracion <- 3 * mean(db$x1)
+      
       
       cantidadObs <- round((p / 100) * n)
       
@@ -50,10 +52,11 @@ iterationPoisson <- function(i, n, p) {
       # Obtener el número de las observaciones en un vector
       obsVector <- as.numeric(row.names(dbBusqueda))
       
-      # Alteración solo a respuesta
-      db[datosAleatorios, c("y")] <- dbAlterados[, 1]
+      # Alteración solo a respuesta -> db[datosAleatorios, c("y")] <- dbAlterados[, 1]
       
-      # Alteración a covariable -> db[datosAleatorios, c("x1")] <- dbAlterados[, 2]
+      # Alteración a covariable -> 
+      db[datosAleatorios, c("x1")] <- dbAlterados[, 2]
+      
       # Alteración a las dos variables -> db[datosAleatorios, c("y", "x1")] <- dbAlterados[, c(1, 2)]
       
       # MODELO
@@ -89,22 +92,29 @@ iterationPoisson <- function(i, n, p) {
     
     # Agregar los resultados a la tabla global
     resultado_total <<- rbind(resultado_total, dataResponse)
-    
-    
-    dataResponse <- data.frame(iteration = i,
-                               dataNumber = n,
-                               modification = p,
-                               detection = porcentaje)
-    
-    
+
   } else {
     cat("Error: El valor ingresado no es válido. Debe ser 2, 5, o 10.\n")
   }
 }
 
-
-
 run<-TRUE
+
+#Prueba profe (alterar covariable y 3 veces la medai de x1)
+if(run){
+  iterations<-1000
+  dataNumber<-50
+  iterationPoisson(iterations,dataNumber,2)
+  iterationPoisson(iterations,dataNumber,5)
+  iterationPoisson(iterations,dataNumber,10)
+  
+  #filename <- paste(sprintf("./GMSimulationsV2./SG_I%d.html", iterations))
+  filename2 <- paste(sprintf("./SimulationsTest./(3x)PoissonTest_I%d.txt", iterations))
+  
+  #print(xtable(resultado_total), type = "html", file = filename, include.rownames = FALSE)
+  write.table(resultado_total, file =filename2, row.names = FALSE)
+}
+
 
 if(run){
   iterations<-50
